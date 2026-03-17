@@ -47,9 +47,8 @@ export default function App() {
   const [memo, setMemo] = useState("");
   const [paymentMethod, setPaymentMethod] = useState("현금");
   const [filterMonth, setFilterMonth] = useState(today.slice(0, 7));
-  const [carryMode, setCarryMode] = useState("auto");
-  const [manualCarry, setManualCarry] = useState("0");
-  const [extraCarry, setExtraCarry] = useState("0");
+  const [carryAdjustments, setCarryAdjustments] = useState({});
+  const [tempCarryAdjustment, setTempCarryAdjustment] = useState("0");
   const [expenseTab, setExpenseTab] = useState("all");
 
   const [categories, setCategories] = useState({
@@ -93,6 +92,7 @@ export default function App() {
           setUsers(data.users || []);
           setInviteCodes(data.inviteCodes || []);
           setEntries(data.entries || []);
+          setCarryAdjustments(data.carryAdjustments || {});
         }
       } catch (error) {
         console.error("초기 데이터 불러오기 실패:", error);
@@ -125,25 +125,30 @@ export default function App() {
       try {
         const ref = doc(db, "appState", APP_STATE_DOC_ID);
         await setDoc(
-          ref,
-          {
-            users,
-            inviteCodes,
-            entries,
-            updatedAt: new Date().toISOString(),
-          },
-          { merge: true }
-        );
+         ref,
+         {
+        users,
+        inviteCodes,
+        entries,
+        carryAdjustments,
+        updatedAt: new Date().toISOString(),
+       },
+  { merge: true }
+);
       } catch (error) {
         console.error("Firestore 저장 실패:", error);
       }
     };
 
     saveAll();
-  }, [isLoaded, users, inviteCodes, entries]);
+   }, [isLoaded, users, inviteCodes, entries, carryAdjustments]);
 
   const availableCategories = categories[entryType];
-
+useEffect(() => {
+  const savedAdjustment = carryAdjustments[filterMonth] || "0";
+  setTempCarryAdjustment(savedAdjustment);
+}, [filterMonth, carryAdjustments]);
+  
   // =========================
   // 인증 로직
   // =========================
@@ -234,6 +239,14 @@ export default function App() {
     setLoginId("");
     setLoginPw("");
   };
+  const applyCarryAdjustment = () => {
+  setCarryAdjustments((prev) => ({
+    ...prev,
+    [filterMonth]: tempCarryAdjustment || "0",
+  }));
+
+  alert(`${filterMonth} 이월 보정금이 반영되었습니다.`);
+};
 
   // =========================
   // 관리자 - 승인 코드 관리
@@ -415,10 +428,10 @@ const cumulativePreviousExpense = cumulativePreviousEntries
 const previousMonthBalance =
   cumulativePreviousIncome - cumulativePreviousExpense;
 
-const baseCarry =
-  carryMode === "auto" ? previousMonthBalance : Number(manualCarry || 0);
+const baseCarry = previousMonthBalance;
 
-const appliedCarry = baseCarry + Number(extraCarry || 0);
+const appliedCarry =
+  baseCarry + Number(carryAdjustments[filterMonth] || 0);
 
   const monthEntries = userEntries.filter((e) =>
     e.date.startsWith(filterMonth)
@@ -1101,62 +1114,47 @@ const appliedCarry = baseCarry + Number(extraCarry || 0);
             </div>
           </div>
         </div>
-
 <div style={styles.section}>
   <h2 style={styles.sectionTitle}>이월 설정</h2>
 
   <div style={styles.grid2}>
     <div>
       <div style={styles.label}>이월 방식</div>
-      <div style={styles.row}>
-        <button
-          style={styles.toggleBtn(carryMode === "auto")}
-          onClick={() => setCarryMode("auto")}
-        >
-          자동 이월
-        </button>
-        <button
-          style={styles.toggleBtn(carryMode === "manual")}
-          onClick={() => setCarryMode("manual")}
-        >
-          직접 입력
-        </button>
+      <div style={{ ...styles.input, background: "#f8fafc" }}>
+        자동 이월 방식으로 적용됩니다.
       </div>
     </div>
 
     <div>
-      <div style={styles.label}>직접 입력 금액</div>
+      <div style={styles.label}>이월 보정금</div>
       <input
         style={styles.input}
         type="number"
-        disabled={carryMode === "auto"}
-        value={manualCarry}
-        onChange={(e) => setManualCarry(e.target.value)}
-        placeholder="직접 이월할 금액 입력"
+        value={tempCarryAdjustment}
+        onChange={(e) => setTempCarryAdjustment(e.target.value)}
+        placeholder="과거 월 정리용 보정 금액 입력"
       />
     </div>
   </div>
 
-  <div style={styles.grid2}>
-    <div>
-      <div style={styles.label}>이월 추가금</div>
-      <input
-        style={styles.input}
-        type="number"
-        value={extraCarry}
-        onChange={(e) => setExtraCarry(e.target.value)}
-        placeholder="정리 안 된 금액 추가 입력"
-      />
-    </div>
+  <div style={{ display: "flex", gap: 10, marginTop: 16, flexWrap: "wrap" }}>
+    <button
+      style={{
+        ...styles.btn,
+        width: "auto",
+        minWidth: 180,
+        marginTop: 0,
+      }}
+      onClick={applyCarryAdjustment}
+    >
+      이번 달 이월 보정 반영
+    </button>
+  </div>
 
-    <div>
-      <div style={styles.label}>적용 방식 안내</div>
-      <div style={{ ...styles.input, background: "#f8fafc" }}>
-        {carryMode === "auto"
-          ? "자동 이월 + 이월 추가금"
-          : "직접 입력 금액 + 이월 추가금"}
-      </div>
-    </div>
+  <div style={{ marginTop: 12, ...styles.small }}>
+    {carryAdjustments[filterMonth] !== undefined
+      ? `${filterMonth} 보정금이 반영되었습니다.`
+      : `${filterMonth} 보정금은 아직 반영되지 않았습니다.`}
   </div>
 
   <div style={{ marginTop: 16 }}>
@@ -1164,10 +1162,7 @@ const appliedCarry = baseCarry + Number(extraCarry || 0);
       누적 이전 잔액 {formatCurrency(previousMonthBalance)}
     </span>
     <span style={styles.badge}>
-      기본 이월금 {formatCurrency(baseCarry)}
-    </span>
-    <span style={styles.badge}>
-      이월 추가금 {formatCurrency(extraCarry)}
+      이월 보정금 {formatCurrency(carryAdjustments[filterMonth] || 0)}
     </span>
     <span style={styles.badge}>
       현재 적용 이월 {formatCurrency(appliedCarry)}
@@ -1177,6 +1172,7 @@ const appliedCarry = baseCarry + Number(extraCarry || 0);
     </span>
   </div>
 </div>
+
         <div style={styles.section}>
           <div style={styles.topRow}>
             <h2 style={styles.sectionTitle}>달력 요약</h2>
