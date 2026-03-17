@@ -49,6 +49,7 @@ export default function App() {
   const [filterMonth, setFilterMonth] = useState(today.slice(0, 7));
   const [carryMode, setCarryMode] = useState("auto");
   const [manualCarry, setManualCarry] = useState("0");
+  const [extraCarry, setExtraCarry] = useState("0");
   const [expenseTab, setExpenseTab] = useState("all");
 
   const [categories, setCategories] = useState({
@@ -414,8 +415,10 @@ const cumulativePreviousExpense = cumulativePreviousEntries
 const previousMonthBalance =
   cumulativePreviousIncome - cumulativePreviousExpense;
 
-const appliedCarry =
+const baseCarry =
   carryMode === "auto" ? previousMonthBalance : Number(manualCarry || 0);
+
+const appliedCarry = baseCarry + Number(extraCarry || 0);
 
   const monthEntries = userEntries.filter((e) =>
     e.date.startsWith(filterMonth)
@@ -1099,52 +1102,128 @@ const appliedCarry =
           </div>
         </div>
 
-        <div style={styles.section}>
-          <h2 style={styles.sectionTitle}>이월 설정</h2>
-          <div style={styles.grid2}>
-            <div>
-              <div style={styles.label}>이월 방식</div>
-              <div style={styles.row}>
-                <button
-                  style={styles.toggleBtn(carryMode === "auto")}
-                  onClick={() => setCarryMode("auto")}
-                >
-                  자동 이월
-                </button>
-                <button
-                  style={styles.toggleBtn(carryMode === "manual")}
-                  onClick={() => setCarryMode("manual")}
-                >
-                  직접 입력
-                </button>
-              </div>
-            </div>
+<div style={styles.section}>
+  <h2 style={styles.sectionTitle}>이월 설정</h2>
 
-            <div>
-              <div style={styles.label}>직접 입력 금액</div>
-              <input
-                style={styles.input}
-                type="number"
-                disabled={carryMode === "auto"}
-                value={manualCarry}
-                onChange={(e) => setManualCarry(e.target.value)}
-              />
-            </div>
-          </div>
+  <div style={styles.grid2}>
+    <div>
+      <div style={styles.label}>이월 방식</div>
+      <div style={styles.row}>
+        <button
+          style={styles.toggleBtn(carryMode === "auto")}
+          onClick={() => setCarryMode("auto")}
+        >
+          자동 이월
+        </button>
+        <button
+          style={styles.toggleBtn(carryMode === "manual")}
+          onClick={() => setCarryMode("manual")}
+        >
+          직접 입력
+        </button>
+      </div>
+    </div>
 
-          <div style={{ marginTop: 16 }}>
-            <span style={styles.badge}>
-              전월 잔액 {formatCurrency(previousMonthBalance)}
-            </span>
-            <span style={styles.badge}>
-              현재 적용 이월 {formatCurrency(appliedCarry)}
-            </span>
-            <span style={styles.badge}>
-              최종 잔액 {formatCurrency(finalBalance)}
-            </span>
-          </div>
-        </div>
+    <div>
+      <div style={styles.label}>직접 입력 금액</div>
+      <input
+        style={styles.input}
+        type="number"
+        disabled={carryMode === "auto"}
+        value={manualCarry}
+        onChange={(e) => setManualCarry(e.target.value)}
+        placeholder="직접 이월할 금액 입력"
+      />
+    </div>
+  </div>
 
+  <div style={styles.grid2}>
+    <div>
+      <div style={styles.label}>이월 추가금</div>
+      <input
+        style={styles.input}
+        type="number"
+        value={extraCarry}
+        onChange={(e) => setExtraCarry(e.target.value)}
+        placeholder="정리 안 된 금액 추가 입력"
+      />
+    </div>
+
+<div style={styles.section}>
+  <h2 style={styles.sectionTitle}>이월 설정</h2>
+
+  <div style={styles.grid2}>
+    <div>
+      <div style={styles.label}>이월 방식</div>
+      <div style={styles.row}>
+        <button
+          style={styles.toggleBtn(carryMode === "auto")}
+          onClick={() => setCarryMode("auto")}
+        >
+          자동 이월
+        </button>
+        <button
+          style={styles.toggleBtn(carryMode === "manual")}
+          onClick={() => setCarryMode("manual")}
+        >
+          직접 입력
+        </button>
+      </div>
+    </div>
+
+    <div>
+      <div style={styles.label}>직접 입력 금액</div>
+      <input
+        style={styles.input}
+        type="number"
+        disabled={carryMode === "auto"}
+        value={manualCarry}
+        onChange={(e) => setManualCarry(e.target.value)}
+        placeholder="직접 이월할 금액 입력"
+      />
+    </div>
+  </div>
+
+  <div style={styles.grid2}>
+    <div>
+      <div style={styles.label}>이월 추가금</div>
+      <input
+        style={styles.input}
+        type="number"
+        value={extraCarry}
+        onChange={(e) => setExtraCarry(e.target.value)}
+        placeholder="정리 안 된 금액 추가 입력"
+      />
+    </div>
+
+    <div>
+      <div style={styles.label}>적용 방식 안내</div>
+      <div style={{ ...styles.input, background: "#f8fafc" }}>
+        {carryMode === "auto"
+          ? "자동 이월 + 이월 추가금"
+          : "직접 입력 금액 + 이월 추가금"}
+      </div>
+    </div>
+  </div>
+
+  <div style={{ marginTop: 16 }}>
+    <span style={styles.badge}>
+      누적 이전 잔액 {formatCurrency(previousMonthBalance)}
+    </span>
+    <span style={styles.badge}>
+      기본 이월금 {formatCurrency(baseCarry)}
+    </span>
+    <span style={styles.badge}>
+      이월 추가금 {formatCurrency(extraCarry)}
+    </span>
+    <span style={styles.badge}>
+      현재 적용 이월 {formatCurrency(appliedCarry)}
+    </span>
+    <span style={styles.badge}>
+      최종 잔액 {formatCurrency(finalBalance)}
+    </span>
+  </div>
+</div>
         <div style={styles.section}>
           <div style={styles.topRow}>
             <h2 style={styles.sectionTitle}>달력 요약</h2>
