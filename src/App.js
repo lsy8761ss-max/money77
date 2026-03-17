@@ -1149,53 +1149,6 @@ const appliedCarry = baseCarry + Number(extraCarry || 0);
       />
     </div>
 
-<div style={styles.section}>
-  <h2 style={styles.sectionTitle}>이월 설정</h2>
-
-  <div style={styles.grid2}>
-    <div>
-      <div style={styles.label}>이월 방식</div>
-      <div style={styles.row}>
-        <button
-          style={styles.toggleBtn(carryMode === "auto")}
-          onClick={() => setCarryMode("auto")}
-        >
-          자동 이월
-        </button>
-        <button
-          style={styles.toggleBtn(carryMode === "manual")}
-          onClick={() => setCarryMode("manual")}
-        >
-          직접 입력
-        </button>
-      </div>
-    </div>
-
-    <div>
-      <div style={styles.label}>직접 입력 금액</div>
-      <input
-        style={styles.input}
-        type="number"
-        disabled={carryMode === "auto"}
-        value={manualCarry}
-        onChange={(e) => setManualCarry(e.target.value)}
-        placeholder="직접 이월할 금액 입력"
-      />
-    </div>
-  </div>
-
-  <div style={styles.grid2}>
-    <div>
-      <div style={styles.label}>이월 추가금</div>
-      <input
-        style={styles.input}
-        type="number"
-        value={extraCarry}
-        onChange={(e) => setExtraCarry(e.target.value)}
-        placeholder="정리 안 된 금액 추가 입력"
-      />
-    </div>
-
     <div>
       <div style={styles.label}>적용 방식 안내</div>
       <div style={{ ...styles.input, background: "#f8fafc" }}>
