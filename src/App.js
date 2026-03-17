@@ -399,25 +399,23 @@ export default function App() {
     return entries.filter((e) => e.userId === currentUser.id);
   }, [entries, currentUser]);
 
-  const previousMonth = useMemo(() => {
-    const [year, month] = filterMonth.split("-").map(Number);
-    const d = new Date(year, month - 2, 1);
-    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
-  }, [filterMonth]);
+const cumulativePreviousEntries = userEntries.filter(
+  (e) => e.date.slice(0, 7) < filterMonth
+);
 
-  const previousMonthEntries = userEntries.filter((e) =>
-    e.date.startsWith(previousMonth)
-  );
-  const previousMonthIncome = previousMonthEntries
-    .filter((e) => e.type === "income")
-    .reduce((sum, e) => sum + e.amount, 0);
-  const previousMonthExpense = previousMonthEntries
-    .filter((e) => e.type === "expense")
-    .reduce((sum, e) => sum + e.amount, 0);
-  const previousMonthBalance = previousMonthIncome - previousMonthExpense;
+const cumulativePreviousIncome = cumulativePreviousEntries
+  .filter((e) => e.type === "income")
+  .reduce((sum, e) => sum + e.amount, 0);
 
-  const appliedCarry =
-    carryMode === "auto" ? previousMonthBalance : Number(manualCarry || 0);
+const cumulativePreviousExpense = cumulativePreviousEntries
+  .filter((e) => e.type === "expense")
+  .reduce((sum, e) => sum + e.amount, 0);
+
+const previousMonthBalance =
+  cumulativePreviousIncome - cumulativePreviousExpense;
+
+const appliedCarry =
+  carryMode === "auto" ? previousMonthBalance : Number(manualCarry || 0);
 
   const monthEntries = userEntries.filter((e) =>
     e.date.startsWith(filterMonth)
